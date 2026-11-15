@@ -2,13 +2,12 @@
 
 #include <utility>
 
-#include <Geode/binding/CCMenuItemSpriteExtra.hpp>
 #include <Geode/cocos/base_nodes/CCNode.h>
 #include <Geode/cocos/cocoa/CCGeometry.h>
 #include <Geode/cocos/cocoa/CCObject.h>
-#include <Geode/cocos/menu_nodes/CCMenu.h>
 #include <Geode/cocos/sprite_nodes/CCSprite.h>
 #include <Geode/cocos/support/CCPointExtension.h>
+#include <Geode/ui/Button.hpp>
 #include <Geode/ui/Label.hpp>
 #include <Geode/ui/Layout.hpp>
 #include <Geode/ui/NineSlice.hpp>
@@ -57,17 +56,13 @@ bool SongCell::init(int id, SongMetadata* songInfo, const CCSize& size, geode::F
     idLabel->setScale(0.6f);
     m_songIDLabel = idLabel;
     this->addChild(idLabel);
-    auto* menu = CCMenu::create();
     auto* spr = CCSprite::createWithSpriteFrameName("GJ_arrow_01_001.png");
     spr->setFlipX(true);
     spr->setScale(0.8f);
-    auto* btn = CCMenuItemSpriteExtra::create(spr, this, menu_selector(SongCell::onSelectSong));
-    menu->addChild(btn);
-    this->addChild(menu);
-    menu->setPosition(ccp(290.f, 30.f));
+    auto* btn = Button::createWithNode(spr, [this](Button*) { m_callback(); });
+    btn->setPosition(ccp(290.f, 30.f));
+    this->addChild(btn);
     return true;
 }
-
-void SongCell::onSelectSong(CCObject*) { m_callback(); }
 
 }  // namespace jukebox

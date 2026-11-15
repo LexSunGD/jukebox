@@ -1,4 +1,3 @@
-#include <filesystem>
 #include <optional>
 #include <string>
 #include <unordered_map>
@@ -6,7 +5,6 @@
 #include <vector>
 
 #include <Geode/Result.hpp>
-#include <Geode/binding/CCMenuItemSpriteExtra.hpp>
 #include <Geode/binding/CustomSongWidget.hpp>
 #include <Geode/binding/FLAlertLayer.hpp>
 #include <Geode/binding/GJGameLevel.hpp>
@@ -18,12 +16,13 @@
 #include <Geode/cocos/cocoa/CCObject.h>
 #include <Geode/cocos/menu_nodes/CCMenu.h>
 #include <Geode/cocos/sprite_nodes/CCSprite.h>
+#include <Geode/loader/Dirs.hpp>
 #include <Geode/loader/Event.hpp>
 #include <Geode/loader/Log.hpp>
 #include <Geode/loader/Mod.hpp>
-#include <Geode/mapping/CCFileUtils.hpp>
 #include <Geode/modify/CustomSongWidget.hpp>  // IWYU pragma: keep
 #include <Geode/modify/LevelInfoLayer.hpp>    // IWYU pragma: keep
+#include <Geode/ui/Button.hpp>
 #include <Geode/ui/Label.hpp>
 #include <Geode/ui/Layout.hpp>
 #include <Geode/ui/SimpleAxisLayout.hpp>
@@ -31,7 +30,6 @@
 #include <Geode/utils/cocos.hpp>
 #include <asp/fs/Path.hpp>
 #include <asp/fs/fs.hpp>
-#include <asp/fs/std.hpp>  // IWYU pragma: keep
 #include <fmt/format.h>
 
 #include "jukebox/events/indexes_loaded.hpp"
@@ -46,8 +44,8 @@ using namespace jukebox;
 class $modify(JBSongWidget, CustomSongWidget) {
     struct Fields {
         Nongs* nongs = nullptr;
-        CCMenu* labelMenu = nullptr;
-        CCMenu* pinMenu = nullptr;
+        CCNode* labelMenu = nullptr;
+        CCNode* pinMenu = nullptr;
         geode::Label* sizeIdLabel = nullptr;
         std::string songIds;
         std::string sfxIds;
@@ -57,7 +55,7 @@ class $modify(JBSongWidget, CustomSongWidget) {
         std::string lastMultiAssetValue;
         bool isCalculatingMultiAssetSize = false;
         bool enqueuedMultiAssetTask = false;
-        CCMenuItemSpriteExtra* btnDisc = nullptr;
+        Button* btnDisc = nullptr;
         std::unordered_map<int, Nongs*> assetNongData;
         std::optional<int> levelID = std::nullopt;
     };
@@ -97,7 +95,7 @@ class $modify(JBSongWidget, CustomSongWidget) {
             } else {
                 sprDiscGold->setScale(0.7f);
             }
-            m_fields->btnDisc->setSprite(sprDiscGold);
+            m_fields->btnDisc->setDisplayNode(sprDiscGold);
         }
     }
 
@@ -165,13 +163,13 @@ class $modify(JBSongWidget, CustomSongWidget) {
     void maybeChangeDownloadedMark(const Nongs* nongs) {
         if (m_songs.empty()) { return; }
 
-        const std::optional<std::filesystem::path> optPath = nongs->active()->path();
+        const std::optional<asp::fs::Path> optPath = nongs->active()->path();
 
         if (const auto found = m_songs.find(nongs->songID()); found != m_songs.end()) {
             if (!optPath) {
                 found->second = false;
             } else {
-                found->second = asp::fs::exists(asp::fs::Path::fromStdPath(std::move(optPath).value()));
+                found->second = asp::fs::exists(optPath.value());
             }
         }
     }
@@ -261,8 +259,8 @@ class $modify(JBSongWidget, CustomSongWidget) {
             return;
         }
 
-        const auto resources = std::filesystem::path(CCFileUtils::get()->getWritablePath2()) / "Resources";
-        const auto song = std::filesystem::path(CCFileUtils::get()->getWritablePath());
+        const auto resources = geode::dirs::getResourcesDir();
+        const auto song = geode::dirs::getSaveDir();
 
         if (m_songIDLabel && !m_fields->lastMultiAssetValue.empty()) {
             this->onFixMultiAssetSizeFinished(m_fields->lastMultiAssetValue, false);
@@ -441,15 +439,15 @@ class $modify(JBSongWidget, CustomSongWidget) {
         if (!m_songs.empty() || !m_sfx.empty()) { return; }
 
         Song* active = nongs->active();
-        std::optional<std::filesystem::path> activePathOpt = active->path();
+        std::optional<asp::fs::Path> activePathOpt = active->path();
         int songID = NongManager::get().adjustSongID(nongs->songID(), m_isRobtopSong);
 
         if (!activePathOpt) { return; }
 
-        const std::filesystem::path activePath = std::move(activePathOpt).value();
+        const asp::fs::Path activePath = std::move(activePathOpt).value();
 
         std::string sizeText;
-        if (asp::fs::exists(asp::fs::Path::fromStdPath(activePath))) {
+        if (asp::fs::exists(activePath)) {
             sizeText = NongManager::get().getFormattedSize(activePath);
         } else if (m_songInfoObject) {
             sizeText = fmt::format("{:.2f}MB", m_songInfoObject->m_fileSize);
@@ -489,15 +487,13 @@ class $modify(JBSongWidget, CustomSongWidget) {
         }
 
         if (Mod::get()->getSettingValue<bool>("old-label-display")) {
-            m_fields->labelMenu = CCMenu::create();
+            m_fields->labelMenu = CCNode::create();
             m_fields->labelMenu->setID("nong-menu"_spr);
-            m_fields->labelMenu->ignoreAnchorPointForPosition(false);
-            m_fields->labelMenu->setTouchPriority(m_buttonMenu->getTouchPriority());
             geode::Label* label = geode::Label::create(active->metadata()->name, "bigFont.fnt");
             label->setID("song-name-label"_spr);
-            CCMenuItemSpriteExtra* btn =
-                CCMenuItemSpriteExtra::create(label, this, menu_selector(JBSongWidget::addNongLayer));
+            Button* btn = Button::createWithNode(label, [this](Button*) { this->addNongLayer(); });
             btn->setID("nong-button"_spr);
+            btn->setTouchPriority(m_buttonMenu->getTouchPriority());
             m_fields->labelMenu->addChild(btn);
             m_fields->labelMenu->setAnchorPoint(m_songLabel->getAnchorPoint());
             m_fields->labelMenu->setContentSize(m_songLabel->getContentSize());
@@ -525,9 +521,8 @@ class $modify(JBSongWidget, CustomSongWidget) {
                 pos = m_songIDLabel->getPosition() + CCSize {-7.0f, -11.0f};
             }
 
-            m_fields->pinMenu = CCMenu::create();
+            m_fields->pinMenu = CCNode::create();
             m_fields->pinMenu->setID("nong-menu"_spr);
-            m_fields->pinMenu->setTouchPriority(m_buttonMenu->getTouchPriority());
 
             CCSprite* sprRays = CCSprite::createWithSpriteFrameName("JB_PinDiscRays.png"_spr);
             CCSprite* sprDisc = CCSprite::createWithSpriteFrameName("JB_PinDisc.png"_spr);
@@ -540,9 +535,9 @@ class $modify(JBSongWidget, CustomSongWidget) {
             }
             sprDisc->setID("nong-pin"_spr);
 
-            CCMenuItemSpriteExtra* btnDisc =
-                CCMenuItemSpriteExtra::create(sprDisc, this, menu_selector(JBSongWidget::addNongLayer));
+            Button* btnDisc = Button::createWithNode(sprDisc, [this](Button*) { this->addNongLayer(); });
             btnDisc->setID("nong-button"_spr);
+            btnDisc->setTouchPriority(m_buttonMenu->getTouchPriority());
 
             sprRays->setID("nong-pin-rays"_spr);
             sprRays->setZOrder(-1);
@@ -559,7 +554,6 @@ class $modify(JBSongWidget, CustomSongWidget) {
             sprRays->runAction(rotateAction);
 
             m_fields->pinMenu->setAnchorPoint({0.5f, 0.5f});
-            m_fields->pinMenu->ignoreAnchorPointForPosition(false);
             m_fields->pinMenu->addChildAtPosition(btnDisc, Anchor::Center);
             m_fields->pinMenu->setContentSize(btnDisc->getScaledContentSize());
             m_fields->pinMenu->setLayout(AnchorLayout::create());
@@ -576,7 +570,7 @@ class $modify(JBSongWidget, CustomSongWidget) {
         this->updateIdAndSizeLabel(nongs);
     }
 
-    void addNongLayer(CCObject*) {
+    void addNongLayer() {
         if (!m_songs.empty()) { this->getMultiAssetSongInfo(); }
         std::vector<int> ids;
         int id = m_songInfoObject->m_songID;

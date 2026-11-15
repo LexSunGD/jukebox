@@ -9,7 +9,6 @@
 #include <Geode/utils/general.hpp>
 #include <asp/fs/Path.hpp>
 #include <asp/fs/fs.hpp>
-#include <asp/fs/std.hpp>  // IWYU pragma: keep
 
 #include "jukebox/events/get_song_info.hpp"
 #include "jukebox/managers/nong_manager.hpp"
@@ -23,12 +22,10 @@ std::string JBMusicDownloadManager::pathForSong(int id) {
     if (!nongs.has_value()) { return MusicDownloadManager::pathForSong(id); }
     Nongs* value = nongs.value();
     Song* active = value->active();
-    if (!asp::fs::exists(asp::fs::Path::fromStdPath(active->path().value()))) {
-        return MusicDownloadManager::pathForSong(id);
-    }
+    if (!asp::fs::exists(active->path().value())) { return MusicDownloadManager::pathForSong(id); }
     NongManager::get().m_currentlyPreparingNong = value;
 
-    return asp::fs::Path::fromStdPath(active->path().value()).string();
+    return active->path().value().string();
 }
 
 void JBMusicDownloadManager::onGetSongInfoCompleted(std::string p1, std::string p2) {

@@ -3,7 +3,6 @@
 #include <algorithm>
 #include <cctype>
 #include <cstdint>
-#include <filesystem>
 #include <functional>
 #include <memory>
 #include <optional>
@@ -12,15 +11,14 @@
 #include <utility>
 #include <vector>
 
-#include <Geode/binding/CCMenuItemSpriteExtra.hpp>
 #include <Geode/cocos/base_nodes/CCNode.h>
 #include <Geode/cocos/cocoa/CCGeometry.h>
 #include <Geode/cocos/cocoa/CCObject.h>
-#include <Geode/cocos/menu_nodes/CCMenu.h>
 #include <Geode/cocos/platform/CCPlatformMacros.h>  // IWYU pragma: keep
 #include <Geode/cocos/sprite_nodes/CCSprite.h>
 #include <Geode/loader/Event.hpp>
 #include <Geode/loader/Log.hpp>
+#include <Geode/ui/Button.hpp>
 #include <Geode/ui/Label.hpp>
 #include <Geode/ui/Layout.hpp>
 #include <Geode/ui/LoadingSpinner.hpp>
@@ -33,7 +31,6 @@
 #include <Geode/utils/string.hpp>
 #include <asp/fs/Path.hpp>
 #include <asp/fs/fs.hpp>
-#include <asp/fs/std.hpp>  // IWYU pragma: keep
 #include <asp/iter/std.hpp>
 #include <fmt/core.h>
 #include <fmt/format.h>
@@ -91,9 +88,10 @@ bool NongList::init(
     m_bg->setID("background");
     this->addChildAtPosition(m_bg, Anchor::Center);
 
-    m_backMenu = CCMenu::create();
+    m_backMenu = CCNode::create();
+    m_backMenu->setAnchorPoint({0.5f, 0.5f});
     auto* spr = CCSprite::createWithSpriteFrameName("backArrowPlain_01_001.png");
-    auto* backBtn = CCMenuItemSpriteExtra::create(spr, this, menu_selector(NongList::onBack));
+    auto* backBtn = Button::createWithNode(spr, [this](Button*) { this->onBack(); });
     m_backBtn = backBtn;
     m_backBtn->setID("back-btn");
     m_backBtn->setVisible(false);
@@ -126,7 +124,7 @@ bool NongList::init(
     );
     m_list->setID("list");
 
-    this->addChildAtPosition(m_list, Anchor::Center, -m_list->getScaledContentSize() / 2);
+    this->addChildAtPosition(m_list, Anchor::Center);
 
     m_onListTypeChange(m_currentSong);
 
@@ -148,7 +146,7 @@ void NongList::build() {
 
         m_searchInput->setVisible(false);
         m_list->setContentSize({m_list->getContentSize().width, this->getContentSize().height - s_padding});
-        m_list->updateAnchoredPosition(Anchor::Center, -m_list->getScaledContentSize() / 2);
+        m_list->updateAnchoredPosition(Anchor::Center);
 
         for (int id : m_songIds) {
             std::optional<Nongs*> nongs = NongManager::get().getNongs(id);
@@ -167,9 +165,7 @@ void NongList::build() {
         m_searchInput->setVisible(true);
         float listHeight = this->getContentSize().height - s_padding - s_searchBarHeight;
         m_list->setContentSize({m_list->getContentSize().width, listHeight});
-        m_list->updateAnchoredPosition(
-            Anchor::Center, CCPoint {0.0f, -(s_searchBarHeight / 2)} - m_list->getScaledContentSize() / 2
-        );
+        m_list->updateAnchoredPosition(Anchor::Center, CCPoint {0.0f, -(s_searchBarHeight / 2)});
 
         int id = m_currentSong.value();
 
@@ -350,9 +346,9 @@ void NongList::addSongToList(Song* nong, Nongs* parent, bool liveInsert) {
     CCSize itemSize = {m_list->getScaledContentSize().width - s_padding, s_itemSize};
 
     std::string uniqueID = nong->metadata()->uniqueID;
-    std::optional<std::filesystem::path> path = nong->path();
+    std::optional<asp::fs::Path> path = nong->path();
     bool isFromIndex = nong->indexID().has_value();
-    bool isDownloaded = path.has_value() && asp::fs::exists(asp::fs::Path::fromStdPath(path.value()));
+    bool isDownloaded = path.has_value() && asp::fs::exists(path.value());
     NongCell* cell = NongCell::create(id, uniqueID, itemSize, m_levelID, std::nullopt);
     cell->setID(uniqueID);
 
@@ -398,7 +394,7 @@ void NongList::scrollToTop() {
     m_list->m_contentLayer->setPositionY(-m_list->m_contentLayer->getContentHeight() + m_list->getContentHeight());
 }
 
-void NongList::onBack(cocos2d::CCObject* /*target*/) {
+void NongList::onBack() {
     if (!m_currentSong.has_value() || m_songIds.size() < 2) { return; }
 
     // Multi-song view has no search

@@ -2,12 +2,10 @@
 
 #include <utility>
 
-#include <Geode/binding/CCMenuItemSpriteExtra.hpp>
 #include <Geode/cocos/base_nodes/CCNode.h>
 #include <Geode/cocos/cocoa/CCGeometry.h>
 #include <Geode/cocos/cocoa/CCObject.h>
 #include <Geode/cocos/layers_scenes_transitions_nodes/CCLayer.h>
-#include <Geode/cocos/menu_nodes/CCMenu.h>
 #include <Geode/cocos/misc_nodes/CCClippingNode.h>
 #include <Geode/cocos/misc_nodes/CCProgressTimer.h>
 #include <Geode/cocos/platform/CCPlatformMacros.h>  // IWYU pragma: keep
@@ -15,6 +13,7 @@
 #include <Geode/loader/Mod.hpp>
 #include <Geode/mapping/CCClippingNode.hpp>
 #include <Geode/mapping/CCProgressTimer.hpp>
+#include <Geode/ui/Button.hpp>
 #include <Geode/ui/Label.hpp>
 #include <Geode/ui/Layout.hpp>
 #include <Geode/ui/NineSlice.hpp>
@@ -152,7 +151,7 @@ void NongCellUI::build() {
     this->addChildAtPosition(m_songInfoNode, Anchor::Left, {PADDING_X, 0.0f});
 
     // Buttons menu
-    m_buttonsMenu = CCMenu::create();
+    m_buttonsMenu = CCNode::create();
     m_buttonsMenu->setID("buttons-menu");
     m_buttonsMenu->setAnchorPoint({1.0f, 0.5f});
     m_buttonsMenu->setContentSize({buttonsWidth, maxSize.height});
@@ -163,9 +162,8 @@ void NongCellUI::build() {
     // Edit button
     CCSprite* editSprite = CCSprite::createWithSpriteFrameName("JB_Edit.png"_spr);
     editSprite->setScale(0.7f);
-    m_editButton = CCMenuItemSpriteExtra::create(editSprite, this, menu_selector(NongCellUI::onEdit));
+    m_editButton = Button::createWithNode(editSprite, [this](Button*) { m_onEdit(); });
     m_editButton->setID("edit-button");
-    m_editButton->setAnchorPoint({0.5f, 0.5f});
     m_buttonsMenu->addChild(m_editButton);
 
     // Select button
@@ -174,8 +172,7 @@ void NongCellUI::build() {
     CCSprite* selectSprite = CCSprite::createWithSpriteFrameName(selectSpriteName);
     selectSprite->setScale(0.7f);
 
-    m_selectButton = CCMenuItemSpriteExtra::create(selectSprite, this, menu_selector(NongCellUI::onSelect));
-    m_selectButton->setAnchorPoint({0.5f, 0.5f});
+    m_selectButton = Button::createWithNode(selectSprite, [this](Button*) { m_onSelect(); });
     m_selectButton->setID("set-button");
 
     // Make the width static so it doesn't change between ON/OFF
@@ -188,7 +185,7 @@ void NongCellUI::build() {
     CCSprite* fixDefaultSprite = CCSprite::createWithSpriteFrameName("GJ_downloadsIcon_001.png");
     fixDefaultSprite->setScale(0.8f);
     if (!m_isSelected) { fixDefaultSprite->setColor({.r = 0x80, .g = 0x80, .b = 0x80}); }
-    m_fixButton = CCMenuItemSpriteExtra::create(fixDefaultSprite, this, menu_selector(NongCellUI::onFixDefault));
+    m_fixButton = Button::createWithNode(fixDefaultSprite, [this](Button*) { m_onFixDefault(); });
     m_fixButton->setID("fix-button");
     m_buttonsMenu->addChild(m_fixButton);
 
@@ -197,9 +194,9 @@ void NongCellUI::build() {
     CCSprite* downloadCancelSprite = CCSprite::createWithSpriteFrameName("GJ_cancelDownloadBtn_001.png");
     downloadSprite->setScale(0.7f);
     downloadCancelSprite->setScale(0.7f);
-    m_downloadButton = CCMenuItemSpriteExtra::create(
-        m_isDownloading ? downloadCancelSprite : downloadSprite, this, menu_selector(NongCellUI::onDownload)
-    );
+    m_downloadButton = Button::createWithNode(m_isDownloading ? downloadCancelSprite : downloadSprite, [this](Button*) {
+        m_onDownload();
+    });
     m_downloadButton->setID("download-button");
     m_downloadButton->setVisible(!m_isDownloaded);
     m_buttonsMenu->addChild(m_downloadButton);
@@ -217,7 +214,9 @@ void NongCellUI::build() {
     m_downloadProgressTimer->setID("progress-bar");
     m_downloadProgressTimer->setScale(0.66f);
 
-    m_downloadProgressContainer = CCMenu::create();
+    m_downloadProgressContainer = CCNode::create();
+    m_downloadProgressContainer->setAnchorPoint({0.5f, 0.5f});
+    m_downloadProgressContainer->setContentSize(m_downloadButton->getContentSize());
 
     m_downloadProgressContainer->addChildAtPosition(m_downloadProgressTimer, Anchor::Center);
     m_downloadProgressContainer->addChildAtPosition(progressBarBack, Anchor::Center);
@@ -230,7 +229,7 @@ void NongCellUI::build() {
     // Trash button
     CCSprite* trashSprite = CCSprite::createWithSpriteFrameName("GJ_trashBtn_001.png");
     trashSprite->setScale(0.6475f);
-    m_trashButton = CCMenuItemSpriteExtra::create(trashSprite, this, menu_selector(NongCellUI::onTrash));
+    m_trashButton = Button::createWithNode(trashSprite, [this](Button*) { m_onTrash(); });
     m_trashButton->setID("trash-button");
     m_buttonsMenu->addChild(m_trashButton);
 
@@ -260,12 +259,6 @@ void NongCellUI::buildOnlyDownloadProgress() {
         m_downloadProgressTimer->setPercentage(m_downloadProgress);
     }
 }
-
-void NongCellUI::onSelect(CCObject*) { m_onSelect(); }
-void NongCellUI::onTrash(CCObject*) { m_onTrash(); }
-void NongCellUI::onFixDefault(CCObject*) { m_onFixDefault(); }
-void NongCellUI::onDownload(CCObject*) { m_onDownload(); }
-void NongCellUI::onEdit(CCObject*) { m_onEdit(); }
 
 NongCellUI* NongCellUI::create(
     const cocos2d::CCSize& size,

@@ -19,9 +19,9 @@ protected:
 
     bool init(std::vector<std::string> indexIDs, geode::Function<void(const std::string& indexID)> chooseIndex);
     void updateLabel();
-    void onRight(CCObject*);
-    void onLeft(CCObject*);
-    void onOK(CCObject*);
+    void onRight();
+    void onLeft();
+    void onOK();
 
 public:
     static IndexChoosePopup* create(

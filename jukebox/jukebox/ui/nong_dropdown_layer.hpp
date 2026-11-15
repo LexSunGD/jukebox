@@ -2,12 +2,12 @@
 
 #include <vector>
 
-#include <Geode/binding/CCMenuItemSpriteExtra.hpp>
 #include <Geode/binding/CustomSongWidget.hpp>
+#include <Geode/cocos/base_nodes/CCNode.h>
 #include <Geode/cocos/cocoa/CCObject.h>
-#include <Geode/cocos/menu_nodes/CCMenu.h>
 #include <Geode/cocos/platform/CCPlatformMacros.h>  // IWYU pragma: keep
 #include <Geode/loader/Event.hpp>
+#include <Geode/ui/Button.hpp>
 #include <Geode/ui/Popup.hpp>
 #include <Geode/utils/cocos.hpp>
 
@@ -26,10 +26,10 @@ protected:
     NongList* m_list = nullptr;
     std::optional<int> m_levelID;
 
-    CCMenuItemSpriteExtra* m_addBtn = nullptr;
-    CCMenuItemSpriteExtra* m_discordBtn = nullptr;
-    CCMenuItemSpriteExtra* m_deleteBtn = nullptr;
-    cocos2d::CCMenu* m_bottomRightMenu = nullptr;
+    geode::Button* m_addBtn = nullptr;
+    geode::Button* m_discordBtn = nullptr;
+    geode::Button* m_deleteBtn = nullptr;
+    cocos2d::CCNode* m_bottomRightMenu = nullptr;
 
     geode::ListenerHandle m_songErrorListener;
     geode::ListenerHandle m_songInfoListener;
@@ -48,14 +48,14 @@ protected:
     );
     void createList();
     cocos2d::CCSize getCellSize() const;
-    void deleteAllNongs(cocos2d::CCObject*);
+    void deleteAllNongs();
     void fetchSongFileHub(cocos2d::CCObject*);
-    void onSettings(cocos2d::CCObject*);
-    void openAddPopup(cocos2d::CCObject*);
+    void onSettings();
+    void openAddPopup();
 
 public:
     void onSelectSong(int songID);
-    void onDiscord(cocos2d::CCObject*);
+    void onDiscord();
     void addSong(Nongs&& song, bool popup = true);
     void updateParentWidget(SongMetadata const& song);
 

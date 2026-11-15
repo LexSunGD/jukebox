@@ -1,9 +1,9 @@
 #pragma once
 
-#include <Geode/binding/CCMenuItemToggler.hpp>
 #include <Geode/cocos/base_nodes/CCNode.h>
 #include <Geode/cocos/cocoa/CCGeometry.h>
 #include <Geode/cocos/cocoa/CCObject.h>
+#include <Geode/ui/Toggler.hpp>
 #include <Geode/utils/cocos.hpp>
 #include <Geode/utils/function.hpp>
 
@@ -22,7 +22,7 @@ protected:
     IndexSource* m_index = nullptr;
     geode::Function<void()> m_onDelete;
 
-    geode::Ref<CCMenuItemToggler> m_toggleButton;
+    geode::Ref<geode::Toggler> m_toggleButton;
 
     bool init(
         IndexesPopup* parentPopup, IndexSource* index, geode::Function<void()> onDelete, cocos2d::CCSize const& size
@@ -33,8 +33,6 @@ public:
         IndexesPopup* parentPopup, IndexSource* index, geode::Function<void()> onDelete, cocos2d::CCSize const& size
     );
     void updateUI();
-    void onToggle(CCObject*);
-    void onDelete(CCObject*);
 };
 
 }  // namespace jukebox

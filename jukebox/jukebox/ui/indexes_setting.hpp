@@ -5,7 +5,6 @@
 #include <vector>
 
 #include <Geode/Result.hpp>
-#include <Geode/binding/CCMenuItemSpriteExtra.hpp>
 #include <Geode/cocos/cocoa/CCObject.h>
 #include <Geode/loader/SettingV3.hpp>
 #include <matjson.hpp>
@@ -34,7 +33,7 @@ public:
 class IndexSettingNode : public geode::SettingValueNodeV3<IndexSetting> {
 protected:
     bool init(const std::shared_ptr<IndexSetting>& setting, float width);
-    void onView(CCObject* sender);
+    void onView();
     void onToggle(CCObject* sender);
 
 public:

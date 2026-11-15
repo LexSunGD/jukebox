@@ -13,8 +13,7 @@ void left_trim(std::string& s) {
 
 void right_trim(std::string& s) {
     s.erase(
-        std::ranges::find_if(std::views::reverse(s), [](unsigned char ch) { return !std::isspace(ch); }).base(),
-        s.end()
+        std::ranges::find_if(std::views::reverse(s), [](unsigned char ch) { return !std::isspace(ch); }).base(), s.end()
     );
 }
 

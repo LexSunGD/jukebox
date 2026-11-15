@@ -9,8 +9,8 @@
 #include <Geode/binding/CCMenuItemSpriteExtra.hpp>
 #include <Geode/cocos/base_nodes/CCNode.h>
 #include <Geode/cocos/cocoa/CCObject.h>
-#include <Geode/cocos/menu_nodes/CCMenu.h>
 #include <Geode/cocos/sprite_nodes/CCSprite.h>
+#include <Geode/ui/Button.hpp>
 #include <Geode/ui/Label.hpp>
 #include <Geode/ui/Layout.hpp>
 #include <Geode/ui/Popup.hpp>
@@ -29,29 +29,31 @@ bool IndexChoosePopup::init(
     m_indexIDs = std::move(indexIDs);
     m_chooseIndex = std::move(chooseIndex);
 
-    auto* menu = CCMenu::create();
+    auto* menu = CCNode::create();
+    menu->setAnchorPoint({0.5f, 0.5f});
     menu->setContentWidth(m_mainLayer->getContentWidth() - 10.f);
     menu->setContentHeight(m_mainLayer->getContentHeight() - 20.f);
 
-    auto* switchMenu = CCMenu::create();
+    auto* switchMenu = CCNode::create();
+    switchMenu->setAnchorPoint({0.5f, 0.5f});
     switchMenu->setLayout(RowLayout::create());
     switchMenu->setContentSize({menu->getContentSize().width, 40.f});
 
     auto* spriteLeft = CCSprite::createWithSpriteFrameName("edit_leftBtn_001.png");
     spriteLeft->setScale(1.5);
-    auto* btnLeft = CCMenuItemSpriteExtra::create(spriteLeft, this, menu_selector(IndexChoosePopup::onLeft));
+    auto* btnLeft = Button::createWithNode(spriteLeft, [this](Button*) { this->onLeft(); });
 
     auto* spriteRight = CCSprite::createWithSpriteFrameName("edit_rightBtn_001.png");
     spriteRight->setScale(1.5);
-    auto* btnRight = CCMenuItemSpriteExtra::create(spriteRight, this, menu_selector(IndexChoosePopup::onRight));
+    auto* btnRight = Button::createWithNode(spriteRight, [this](Button*) { this->onRight(); });
 
     auto* label = geode::Label::create("", "bigFont.fnt");
     m_label = label;
     label->setLimitLabelWidth(switchMenu->getContentWidth() - 10.f, 0.8f, 0.1f);
     label->setID("index-name");
-    auto* labelMenu = CCMenu::create();
-    labelMenu->addChild(label);
-    labelMenu->setContentWidth(switchMenu->getContentWidth());
+    auto* labelMenu = CCNode::create();
+    labelMenu->setAnchorPoint({0.5f, 0.5f});
+    labelMenu->setContentSize(switchMenu->getContentSize());
     labelMenu->addChildAtPosition(label, Anchor::Center);
 
     switchMenu->addChild(btnLeft);
@@ -59,19 +61,13 @@ bool IndexChoosePopup::init(
     switchMenu->addChild(btnRight);
     switchMenu->updateLayout();
 
-    auto* addSongButton =
-        CCMenuItemSpriteExtra::create(ButtonSprite::create("OK"), this, menu_selector(IndexChoosePopup::onOK));
-    auto* addSongMenu = CCMenu::create();
-    addSongMenu->setID("add-song-menu");
+    auto* addSongButton = Button::createWithNode(ButtonSprite::create("OK"), [this](Button*) { this->onOK(); });
     addSongButton->setID("add-song-button");
-    addSongMenu->setAnchorPoint({0.5f, 0.5f});
-    addSongMenu->setContentSize(addSongButton->getContentSize());
-    addSongMenu->addChildAtPosition(addSongButton, Anchor::Center);
 
     menu->addChildAtPosition(switchMenu, Anchor::Center);
 
     m_mainLayer->addChildAtPosition(menu, Anchor::Center);
-    m_mainLayer->addChildAtPosition(addSongMenu, Anchor::Bottom, {0, 3});
+    m_mainLayer->addChildAtPosition(addSongButton, Anchor::Bottom, {0, 3});
 
     label->setPositionY(label->getPositionY() + 1.f);
 
@@ -94,17 +90,17 @@ void IndexChoosePopup::updateLabel() {
     m_label->setText(IndexManager::get().getIndexName(m_indexIDs.at(m_currentIndex)).value());
 }
 
-void IndexChoosePopup::onLeft(CCObject*) {
+void IndexChoosePopup::onLeft() {
     m_currentIndex = (m_currentIndex - 1 + m_indexIDs.size()) % m_indexIDs.size();
     updateLabel();
 }
 
-void IndexChoosePopup::onRight(CCObject*) {
+void IndexChoosePopup::onRight() {
     m_currentIndex = (m_currentIndex + 1) % m_indexIDs.size();
     updateLabel();
 }
 
-void IndexChoosePopup::onOK(CCObject*) {
+void IndexChoosePopup::onOK() {
     m_chooseIndex(m_indexIDs.at(m_currentIndex));
     m_closeBtn->activate();
 }

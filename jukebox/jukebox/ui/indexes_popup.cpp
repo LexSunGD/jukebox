@@ -3,11 +3,10 @@
 #include <utility>
 #include <vector>
 
-#include <Geode/binding/CCMenuItemSpriteExtra.hpp>
 #include <Geode/cocos/base_nodes/CCNode.h>
 #include <Geode/cocos/cocoa/CCObject.h>
-#include <Geode/cocos/menu_nodes/CCMenu.h>
 #include <Geode/cocos/sprite_nodes/CCSprite.h>
+#include <Geode/ui/Button.hpp>
 #include <Geode/ui/Layout.hpp>
 #include <Geode/ui/Popup.hpp>
 #include <Geode/ui/SimpleAxisLayout.hpp>
@@ -36,13 +35,11 @@ bool IndexesPopup::init(
 
     auto* const spr = CCSprite::createWithSpriteFrameName("GJ_plusBtn_001.png");
     spr->setScale(0.7f);
-    auto* const addBtn = CCMenuItemSpriteExtra::create(spr, this, menu_selector(IndexesPopup::onAdd));
-    addBtn->setAnchorPoint({0.5f, 0.5f});
-    auto* const menu = CCMenu::create();
-    menu->addChild(addBtn);
-    menu->setZOrder(1);
+    auto* const addBtn = Button::createWithNode(spr, [this](Button*) { this->onAdd(); });
+    addBtn->setZOrder(1);
     m_mainLayer->addChildAtPosition(
-        menu, Anchor::BottomRight, {-5.f - (addBtn->getContentWidth() / 2.f), 8.f + (addBtn->getContentHeight() / 2.f)}
+        addBtn, Anchor::BottomRight,
+        {-5.f - (addBtn->getContentWidth() / 2.f), 8.f + (addBtn->getContentHeight() / 2.f)}
     );
 
     return true;
@@ -53,7 +50,7 @@ void IndexesPopup::onClose(CCObject* sender) {
     Popup::onClose(sender);
 }
 
-void IndexesPopup::onAdd(CCObject*) {
+void IndexesPopup::onAdd() {
     m_indexes.push_back({
         .m_url = "",
         .m_userAdded = true,
@@ -84,7 +81,6 @@ void IndexesPopup::createList() {
     if (m_list) { m_list->removeFromParent(); }
 
     m_list = ScrollLayer::create({size.width - (s_padding * 2), size.height - (s_padding * 2) - 4.f});
-    m_list->setPosition({s_padding, s_padding + 2.f});
 
     for (int i = 0; i < m_indexes.size(); i++) {
         auto* const cell = IndexCell::create(
@@ -98,9 +94,9 @@ void IndexesPopup::createList() {
         cell->setAnchorPoint({0.f, 0.f});
         m_list->m_contentLayer->addChild(cell);
     }
-    auto* const menu = CCMenu::create();
-    menu->setContentSize({0.f, 36.f});
-    m_list->m_contentLayer->addChild(menu);
+    auto* const spacer = CCNode::create();
+    spacer->setContentSize({0.f, 36.f});
+    m_list->m_contentLayer->addChild(spacer);
     m_list->m_contentLayer->setLayout(
         SimpleColumnLayout::create()
             ->setMainAxisDirection(AxisDirection::TopToBottom)
@@ -109,7 +105,7 @@ void IndexesPopup::createList() {
             ->setGap(s_padding / 2)
     );
 
-    this->m_mainLayer->addChild(m_list);
+    this->m_mainLayer->addChildAtPosition(m_list, Anchor::Center);
     handleTouchPriority(this);
 }
 

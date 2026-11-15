@@ -1,20 +1,19 @@
 #pragma once
 
-#include <filesystem>
 #include <optional>
 #include <string>
 #include <vector>
 
 #include <Geode/Result.hpp>
 #include <Geode/binding/ButtonSprite.hpp>
-#include <Geode/binding/CCMenuItemSpriteExtra.hpp>
 #include <Geode/cocos/base_nodes/CCNode.h>
 #include <Geode/cocos/cocoa/CCObject.h>
-#include <Geode/cocos/menu_nodes/CCMenu.h>
 #include <Geode/loader/Event.hpp>
+#include <Geode/ui/Button.hpp>
 #include <Geode/ui/Popup.hpp>
 #include <Geode/ui/TextInput.hpp>
 #include <Geode/utils/file.hpp>
+#include <asp/fs/Path.hpp>
 
 #include "jukebox/nong/nong.hpp"
 #include "jukebox/ui/nong_dropdown_layer.hpp"
@@ -44,7 +43,7 @@ protected:
     std::string m_memoizedYoutubeInput;
     std::string m_memoizedHostedInput;
 
-    std::optional<std::filesystem::path> m_localPath = std::nullopt;
+    std::optional<asp::fs::Path> m_localPath = std::nullopt;
 
     cocos2d::CCNode* m_container = nullptr;
     geode::TextInput* m_songNameInput = nullptr;
@@ -52,23 +51,23 @@ protected:
     geode::TextInput* m_levelNameInput = nullptr;
     geode::TextInput* m_startOffsetInput = nullptr;
 
-    cocos2d::CCMenu* m_switchMenu = nullptr;
+    cocos2d::CCNode* m_switchMenu = nullptr;
     ButtonSprite* m_switchLocalSpr = nullptr;
-    CCMenuItemSpriteExtra* m_switchLocalButton = nullptr;
+    geode::Button* m_switchLocalButton = nullptr;
     ButtonSprite* m_switchYTSpr = nullptr;
-    CCMenuItemSpriteExtra* m_switchYTButton = nullptr;
+    geode::Button* m_switchYTButton = nullptr;
     ButtonSprite* m_switchHostedSpr = nullptr;
-    CCMenuItemSpriteExtra* m_switchHostedButton = nullptr;
+    geode::Button* m_switchHostedButton = nullptr;
 
     cocos2d::CCNode* m_specialInfoNode = nullptr;
     geode::TextInput* m_specialInput = nullptr;
-    cocos2d::CCMenu* m_localSongMenu = nullptr;
-    CCMenuItemSpriteExtra* m_localSongButton = nullptr;
-    CCMenuItemSpriteExtra* m_localSongPasteButton = nullptr;
+    cocos2d::CCNode* m_localSongMenu = nullptr;
+    geode::Button* m_localSongButton = nullptr;
+    geode::Button* m_localSongPasteButton = nullptr;
 
-    cocos2d::CCMenu* m_addSongMenu = nullptr;
-    CCMenuItemSpriteExtra* m_addSongButton = nullptr;
-    CCMenuItemSpriteExtra* m_publishSongButton = nullptr;
+    cocos2d::CCNode* m_addSongMenu = nullptr;
+    geode::Button* m_addSongButton = nullptr;
+    geode::Button* m_publishSongButton = nullptr;
 
     SongType m_songType = SongType::LOCAL;
 
@@ -78,15 +77,15 @@ protected:
     void addPathLabel(std::string const& path);
     void onFileOpen(geode::utils::file::PickResult result);
     void setSongType(SongType type, bool memorizePrevious);
-    void onSwitchToLocal(cocos2d::CCObject*);
-    void onSwitchToYT(cocos2d::CCObject*);
-    void onSwitchToHosted(cocos2d::CCObject*);
+    void onSwitchToLocal();
+    void onSwitchToYT();
+    void onSwitchToHosted();
 
     cocos2d::CCSize getPopupSize();
-    void openFile(cocos2d::CCObject*);
-    void addSong(cocos2d::CCObject*);
-    void onPaste(cocos2d::CCObject*);
-    bool isPathValidSong(const std::filesystem::path& song) const;
+    void openFile();
+    void addSong();
+    void onPaste();
+    bool isPathValidSong(const asp::fs::Path& song) const;
     geode::Result<> addLocalSong(
         const std::string& songName, const std::string& artistName, std::optional<std::string> levelName, int offset
     );
@@ -96,8 +95,8 @@ protected:
     geode::Result<> addHostedSong(
         const std::string& songName, const std::string& artistName, std::optional<std::string> levelName, int offset
     );
-    void onPublish(cocos2d::CCObject*);
-    std::optional<ParsedMetadata> tryParseMetadata(std::filesystem::path path);
+    void onPublish();
+    std::optional<ParsedMetadata> tryParseMetadata(asp::fs::Path path);
 
 public:
     static NongAddPopup* create(int songID, std::optional<Song*> nong = std::nullopt);

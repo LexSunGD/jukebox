@@ -7,11 +7,10 @@
 
 #include <Geode/Result.hpp>
 #include <Geode/binding/ButtonSprite.hpp>
-#include <Geode/binding/CCMenuItemSpriteExtra.hpp>
 #include <Geode/cocos/cocoa/CCObject.h>
-#include <Geode/cocos/menu_nodes/CCMenu.h>
 #include <Geode/cocos/platform/CCPlatformMacros.h>  // IWYU pragma: keep
 #include <Geode/loader/SettingV3.hpp>
+#include <Geode/ui/Button.hpp>
 #include <Geode/utils/JsonValidation.hpp>
 #include <Geode/utils/cocos.hpp>
 #include <matjson.hpp>
@@ -36,17 +35,13 @@ bool IndexSettingNode::init(const std::shared_ptr<IndexSetting>& setting, float 
 
     float height = 40.0f;
     this->setContentSize({width, height});
-    CCMenu* menu = CCMenu::create();
-    menu->setPosition({0.0f, 0.0f});
-    menu->setID("inputs-menu");
-
     auto* viewSpr = ButtonSprite::create("View");
     viewSpr->setScale(0.72f);
-    auto* viewBtn = CCMenuItemSpriteExtra::create(viewSpr, this, menu_selector(IndexSettingNode::onView));
+    auto* viewBtn = Button::createWithNode(viewSpr, [this](Button*) { this->onView(); });
+    viewBtn->setID("view-button");
     viewBtn->setPosition(width - 40.f, height - 20.f);
-    menu->addChild(viewBtn);
 
-    this->addChild(menu);
+    this->addChild(viewBtn);
     handleTouchPriority(this);
 
     /*updateVisuals();*/
@@ -54,7 +49,7 @@ bool IndexSettingNode::init(const std::shared_ptr<IndexSetting>& setting, float 
     return true;
 }
 
-void IndexSettingNode::onView(CCObject*) {
+void IndexSettingNode::onView() {
     const std::shared_ptr<IndexSetting> setting = this->getSetting();
     IndexesPopup::create(setting->getValue().indexes, [this](std::vector<IndexSource> indexes) {
         this->setValue(Indexes {std::move(indexes)}, this);

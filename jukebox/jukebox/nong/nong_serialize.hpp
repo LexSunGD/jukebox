@@ -1,13 +1,11 @@
 #pragma once
 
-#include <filesystem>
 #include <memory>
 #include <optional>
 
 #include <Geode/Result.hpp>
 #include <Geode/loader/Log.hpp>
 #include <Geode/utils/file.hpp>  // IWYU pragma: keep
-#include <asp/fs/std.hpp>        // IWYU pragma: keep
 #include <fmt/core.h>
 #include <matjson.hpp>
 
@@ -44,7 +42,7 @@ struct matjson::Serialize<jukebox::LocalSong> {
 
         if (value["filename"].isString()) {
             const std::string filename = value["filename"].asString().unwrap();  // if this crashes I blame mat
-            const std::filesystem::path path = jukebox::NongManager::get().baseNongsPath() / filename;
+            const asp::fs::Path path = jukebox::NongManager::get().baseNongsPath() / filename;
 
             return geode::Ok(jukebox::LocalSong {std::move(metadata), path});
         }
@@ -55,7 +53,7 @@ struct matjson::Serialize<jukebox::LocalSong> {
 
         GEODE_UNWRAP_INTO(auto path, value["path"].as<asp::fs::Path>());
 
-        return geode::Ok(jukebox::LocalSong {std::move(metadata), path.native()});
+        return geode::Ok(jukebox::LocalSong {std::move(metadata), path});
     }
 
     static matjson::Value toJson(const jukebox::LocalSong& value) {
@@ -63,8 +61,8 @@ struct matjson::Serialize<jukebox::LocalSong> {
             {"name", value.metadata()->name},
             {"unique_id", value.metadata()->uniqueID},
             {"artist", value.metadata()->artist},
-            {"filename", asp::fs::Path::fromStdPath(value.path()->filename())},
-            {"path", asp::fs::Path::fromStdPath(value.path().value())},
+            {"filename", value.path()->filename().value_or(asp::fs::PathView {}).toPath()},
+            {"path", value.path().value()},
             {"offset", value.metadata()->startOffset},
         });
         if (value.metadata()->level.has_value()) { ret["level"] = value.metadata()->level.value(); }
@@ -97,8 +95,7 @@ struct matjson::Serialize<jukebox::YTSong> {
         return geode::Ok(
             jukebox::YTSong {
                 std::move(metadata), value["youtube_id"].asString().unwrap(),
-                value["index_id"].asString().map([](auto i) { return std::optional(i); }).unwrapOr(std::nullopt),
-                path.native()
+                value["index_id"].asString().map([](auto i) { return std::optional(i); }).unwrapOr(std::nullopt), path
             }
         );
     }
@@ -108,7 +105,7 @@ struct matjson::Serialize<jukebox::YTSong> {
             {"name", value.metadata()->name},
             {"unique_id", value.metadata()->uniqueID},
             {"artist", value.metadata()->artist},
-            {"path", asp::fs::Path::fromStdPath(value.path().value())},
+            {"path", value.path().value()},
             {"offset", value.metadata()->startOffset},
             {"youtube_id", value.youtubeID()},
         });
@@ -139,7 +136,7 @@ struct matjson::Serialize<jukebox::HostedSong> {
 
         if (value["filename"].isString()) {
             const std::string filename = value["filename"].asString().unwrap();  // if this crashes I blame mat
-            const std::filesystem::path path = jukebox::NongManager::get().baseNongsPath() / filename;
+            const asp::fs::Path path = jukebox::NongManager::get().baseNongsPath() / filename;
 
             return geode::Ok(jukebox::HostedSong {std::move(metadata), url, indexId, path});
         }
@@ -153,8 +150,7 @@ struct matjson::Serialize<jukebox::HostedSong> {
         return geode::Ok(
             jukebox::HostedSong {
                 std::move(metadata), value["url"].asString().unwrap(),
-                value["index_id"].asString().map([](auto i) { return std::optional(i); }).unwrapOr(std::nullopt),
-                path.native()
+                value["index_id"].asString().map([](auto i) { return std::optional(i); }).unwrapOr(std::nullopt), path
             }
         );
     }
@@ -164,8 +160,8 @@ struct matjson::Serialize<jukebox::HostedSong> {
             {"name", value.metadata()->name},
             {"unique_id", value.metadata()->uniqueID},
             {"artist", value.metadata()->artist},
-            {"path", asp::fs::Path::fromStdPath(value.path().value())},
-            {"filename", asp::fs::Path::fromStdPath(value.path()->filename())},
+            {"path", value.path().value()},
+            {"filename", value.path()->filename().value_or(asp::fs::PathView {}).toPath()},
             {"offset", value.metadata()->startOffset},
             {"url", value.url()},
         });

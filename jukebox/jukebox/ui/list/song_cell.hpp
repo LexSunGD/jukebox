@@ -35,7 +35,6 @@ public:
         delete ret;
         return nullptr;
     }
-    void onSelectSong(CCObject*);
 };
 
 }  // namespace jukebox

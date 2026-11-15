@@ -23,7 +23,7 @@ protected:
     void createList();
     cocos2d::CCSize getPopupSize();
     void onClose(cocos2d::CCObject*) override;
-    void onAdd(cocos2d::CCObject*);
+    void onAdd();
 
 public:
     static IndexesPopup* create(std::vector<index::IndexSource>, IndexesCallback setIndexesCallback);

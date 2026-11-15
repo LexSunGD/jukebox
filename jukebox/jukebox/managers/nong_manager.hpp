@@ -1,6 +1,5 @@
 #pragma once
 
-#include <filesystem>
 #include <memory>
 #include <optional>
 #include <string_view>
@@ -10,7 +9,6 @@
 #include <Geode/loader/Mod.hpp>
 #include <Geode/utils/file.hpp>
 #include <asp/fs.hpp>
-#include <asp/fs/std.hpp>  // IWYU pragma: keep
 
 #include "jukebox/nong/nong.hpp"
 
@@ -24,10 +22,10 @@ protected:
     NongManager() = default;
 
     void setupManifestPath() {
-        const std::filesystem::path path = this->baseManifestPath();
+        const asp::fs::Path path = this->baseManifestPath();
 
-        if (!asp::fs::exists(asp::fs::Path::fromStdPath(path))) {
-            auto createDirRes = geode::utils::file::createDirectory(asp::fs::Path::fromStdPath(path));
+        if (!asp::fs::exists(path)) {
+            auto createDirRes = geode::utils::file::createDirectory(path);
             if (createDirRes.isErr()) {
                 geode::log::error("Failed to create manifest path {}: {}", path, createDirRes.unwrapErr());
             }
@@ -35,7 +33,7 @@ protected:
     }
 
     geode::Result<> saveNongs(std::optional<int> saveId = std::nullopt);
-    geode::Result<std::unique_ptr<Nongs>> loadNongsFromPath(const std::filesystem::path& path);
+    geode::Result<std::unique_ptr<Nongs>> loadNongsFromPath(const asp::fs::Path& path);
 
     geode::Result<> migrateV2();
 
@@ -52,14 +50,13 @@ public:
 
     bool initialized() const { return m_initialized; }
 
-    std::filesystem::path baseManifestPath() {
-        static std::filesystem::path path =
-            std::filesystem::path(geode::Mod::get()->getSaveDir().native()) / "manifest";
+    asp::fs::Path baseManifestPath() {
+        static asp::fs::Path path = geode::Mod::get()->getSaveDir() / "manifest";
         return path;
     }
 
-    std::filesystem::path baseNongsPath() {
-        static std::filesystem::path path = std::filesystem::path(geode::Mod::get()->getSaveDir().native()) / "nongs";
+    asp::fs::Path baseNongsPath() {
+        static asp::fs::Path path = geode::Mod::get()->getSaveDir() / "nongs";
         return path;
     }
 
@@ -133,7 +130,7 @@ public:
      *
      * @return the formatted size, with the format x.xxMB
      */
-    std::string getFormattedSize(const std::filesystem::path& path);
+    std::string getFormattedSize(const asp::fs::Path& path);
 
     /**
      * Calculates the total size of multiple assets, then writes it to a string.
@@ -146,7 +143,7 @@ public:
      * @param songDir CCFileUtils::get()->getWritablePath()
      */
     arc::Future<std::string> getMultiAssetSizes(
-        std::string songs, std::string sfx, std::filesystem::path resourcesDir, std::filesystem::path songDir
+        std::string songs, std::string sfx, asp::fs::Path resourcesDir, asp::fs::Path songDir
     );
 
     /**
@@ -191,7 +188,7 @@ public:
     /**
      * Get a path to a song file
      */
-    std::filesystem::path generateSongFilePath(
+    asp::fs::Path generateSongFilePath(
         const std::string& extension, std::optional<std::string> filename = std::nullopt
     );
 

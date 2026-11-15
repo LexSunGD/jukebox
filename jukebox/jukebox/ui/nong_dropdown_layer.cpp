@@ -5,17 +5,17 @@
 #include <utility>
 #include <vector>
 
-#include <Geode/binding/CCMenuItemSpriteExtra.hpp>
 #include <Geode/binding/CustomSongWidget.hpp>
 #include <Geode/binding/FLAlertLayer.hpp>
+#include <Geode/cocos/base_nodes/CCNode.h>
 #include <Geode/cocos/cocoa/CCGeometry.h>
 #include <Geode/cocos/cocoa/CCObject.h>
-#include <Geode/cocos/menu_nodes/CCMenu.h>
 #include <Geode/cocos/sprite_nodes/CCSprite.h>
 #include <Geode/cocos/support/CCPointExtension.h>
 #include <Geode/loader/Event.hpp>
 #include <Geode/loader/Log.hpp>
 #include <Geode/loader/Mod.hpp>
+#include <Geode/ui/Button.hpp>
 #include <Geode/ui/GeodeUI.hpp>
 #include <Geode/ui/Label.hpp>
 #include <Geode/ui/Layout.hpp>
@@ -68,18 +68,18 @@ bool NongDropdownLayer::init(
     manifestLabel->setID("manifest-label");
     m_mainLayer->addChild(manifestLabel);
 
-    m_bottomRightMenu = CCMenu::create();
+    m_bottomRightMenu = CCNode::create();
     m_bottomRightMenu->setID("bottom-right-menu");
     CCSprite* spr = CCSprite::createWithSpriteFrameName("GJ_plusBtn_001.png");
     spr->setScale(0.7f);
-    m_addBtn = CCMenuItemSpriteExtra::create(spr, this, menu_selector(NongDropdownLayer::openAddPopup));
+    m_addBtn = Button::createWithNode(spr, [this](Button*) { this->openAddPopup(); });
 
     spr = CCSprite::createWithSpriteFrameName("gj_discordIcon_001.png");
-    m_discordBtn = CCMenuItemSpriteExtra::create(spr, this, menu_selector(NongDropdownLayer::onDiscord));
+    m_discordBtn = Button::createWithNode(spr, [this](Button*) { this->onDiscord(); });
     m_discordBtn->setID("discord-button");
 
     spr = CCSprite::createWithSpriteFrameName("GJ_deleteIcon_001.png");
-    m_deleteBtn = CCMenuItemSpriteExtra::create(spr, this, menu_selector(NongDropdownLayer::deleteAllNongs));
+    m_deleteBtn = Button::createWithNode(spr, [this](Button*) { this->deleteAllNongs(); });
 
     if (isMultiple) {
         m_addBtn->setVisible(false);
@@ -104,12 +104,11 @@ bool NongDropdownLayer::init(
     m_bottomRightMenu->setZOrder(2);
     m_mainLayer->addChildAtPosition(m_bottomRightMenu, Anchor::BottomRight, CCPoint {-5.0f, 5.0f});
 
-    CCMenu* settingsMenu = CCMenu::create();
+    CCNode* settingsMenu = CCNode::create();
     settingsMenu->setID("settings-menu");
     CCSprite* sprite = CCSprite::createWithSpriteFrameName("GJ_optionsBtn_001.png");
     sprite->setScale(0.8f);
-    CCMenuItemSpriteExtra* settingsButton =
-        CCMenuItemSpriteExtra::create(sprite, this, menu_selector(NongDropdownLayer::onSettings));
+    Button* settingsButton = Button::createWithNode(sprite, [this](Button*) { this->onSettings(); });
     settingsButton->setID("settings-button");
     settingsMenu->addChild(settingsButton);
     settingsMenu->setAnchorPoint({1.0f, 1.0f});
@@ -183,11 +182,11 @@ bool NongDropdownLayer::init(
     return true;
 }
 
-void NongDropdownLayer::onSettings(CCObject* /*sender*/) { openSettingsPopup(Mod::get()); }
+void NongDropdownLayer::onSettings() { openSettingsPopup(Mod::get()); }
 
 void NongDropdownLayer::onSelectSong(int songID) { m_currentSongID = songID; }
 
-void NongDropdownLayer::openAddPopup(CCObject* /*target*/) {
+void NongDropdownLayer::openAddPopup() {
     if (!m_currentSongID.has_value()) { return; }
     NongAddPopup::create(m_currentSongID.value())->show();
 }
@@ -221,7 +220,7 @@ void NongDropdownLayer::createList() {
 
 CCSize NongDropdownLayer::getCellSize() const { return {320.f, 60.f}; }
 
-void NongDropdownLayer::onDiscord(CCObject* /*target*/) {
+void NongDropdownLayer::onDiscord() {
     geode::createQuickPopup(
         "Discord",
         "Do you want to <cb>join the Song File Hub discord "
@@ -243,7 +242,7 @@ void NongDropdownLayer::addSong(Nongs&& song, bool popup) {
     if (popup) { FLAlertLayer::create("Success", "The song was added!", "Ok")->show(); }
 }
 
-void NongDropdownLayer::deleteAllNongs(CCObject*) {
+void NongDropdownLayer::deleteAllNongs() {
     if (!m_currentSongID) { return; }
     createQuickPopup(
         "Delete all nongs", "Are you sure you want to <cr>delete all nongs</c> for this song?", "No", "Yes",

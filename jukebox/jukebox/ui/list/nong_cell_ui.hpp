@@ -1,7 +1,8 @@
 #pragma once
 
+#include <Geode/cocos/base_nodes/CCNode.h>
 #include <Geode/cocos/cocoa/CCObject.h>
-#include <Geode/cocos/menu_nodes/CCMenu.h>
+#include <Geode/ui/Button.hpp>
 #include <Geode/ui/Label.hpp>
 #include <Geode/utils/function.hpp>
 
@@ -20,14 +21,14 @@ protected:
 
     cocos2d::CCNode* m_songInfoNode = nullptr;
 
-    cocos2d::CCMenu* m_buttonsMenu = nullptr;
-    CCMenuItemSpriteExtra* m_selectButton = nullptr;
-    CCMenuItemSpriteExtra* m_trashButton = nullptr;
-    CCMenuItemSpriteExtra* m_fixButton = nullptr;
-    CCMenuItemSpriteExtra* m_downloadButton = nullptr;
-    CCMenuItemSpriteExtra* m_editButton = nullptr;
+    cocos2d::CCNode* m_buttonsMenu = nullptr;
+    geode::Button* m_selectButton = nullptr;
+    geode::Button* m_trashButton = nullptr;
+    geode::Button* m_fixButton = nullptr;
+    geode::Button* m_downloadButton = nullptr;
+    geode::Button* m_editButton = nullptr;
 
-    cocos2d::CCMenu* m_downloadProgressContainer = nullptr;
+    cocos2d::CCNode* m_downloadProgressContainer = nullptr;
     cocos2d::CCProgressTimer* m_downloadProgressTimer = nullptr;
 
     bool init(
@@ -75,12 +76,6 @@ public:
 
     void build();
     void buildOnlyDownloadProgress();
-
-    void onSelect(CCObject*);
-    void onTrash(CCObject*);
-    void onFixDefault(CCObject*);
-    void onDownload(CCObject*);
-    void onEdit(CCObject*);
 };
 
 }  // namespace jukebox

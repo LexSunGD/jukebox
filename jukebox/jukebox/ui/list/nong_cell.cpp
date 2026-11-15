@@ -15,7 +15,6 @@
 #include <Geode/ui/Popup.hpp>
 #include <asp/fs/Path.hpp>
 #include <asp/fs/fs.hpp>
-#include <asp/fs/std.hpp>  // IWYU pragma: keep
 #include <fmt/core.h>
 #include <fmt/format.h>
 #include <fmt/ranges.h>
@@ -150,8 +149,7 @@ bool NongCell::initLocal() {
                        : false;
     m_isDefault = nongs.value()->defaultSong()->metadata()->uniqueID == m_uniqueID;
     m_isActive = nongs.value()->active()->metadata()->uniqueID == m_uniqueID;
-    m_isDownloaded =
-        songInfo->path().has_value() && asp::fs::exists(asp::fs::Path::fromStdPath(songInfo->path().value()));
+    m_isDownloaded = songInfo->path().has_value() && asp::fs::exists(songInfo->path().value());
     m_isDownloadable = songInfo->type() != NongType::LOCAL;
     m_isDownloading = false;
     m_nongCell->m_showEditButton = !m_isDefault && !songInfo->indexID().has_value();

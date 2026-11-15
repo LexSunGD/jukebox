@@ -2,18 +2,17 @@
 
 #include <utility>
 
-#include <Geode/binding/CCMenuItemSpriteExtra.hpp>
-#include <Geode/binding/CCMenuItemToggler.hpp>
 #include <Geode/cocos/base_nodes/CCNode.h>
 #include <Geode/cocos/cocoa/CCGeometry.h>
 #include <Geode/cocos/cocoa/CCObject.h>
-#include <Geode/cocos/menu_nodes/CCMenu.h>
 #include <Geode/cocos/sprite_nodes/CCSprite.h>
 #include <Geode/cocos/support/CCPointExtension.h>
+#include <Geode/ui/Button.hpp>
 #include <Geode/ui/Layout.hpp>
 #include <Geode/ui/NineSlice.hpp>
 #include <Geode/ui/SimpleAxisLayout.hpp>
 #include <Geode/ui/TextInput.hpp>
+#include <Geode/ui/Toggler.hpp>
 #include <Geode/utils/function.hpp>
 
 #include "jukebox/nong/index.hpp"
@@ -43,31 +42,21 @@ bool IndexCell::init(
     bg->setContentSize(size / bg->getScale());
     this->addChildAtPosition(bg, Anchor::Center);
 
-    // m_enableButton = CCMenuItemSpriteExtra::create(
-    //     CCSprite::createWithSpriteFrameName("GJ_checkOn_001.png"),
-    //     this,
-    //     nullptr
-    // );
-    //
-    // m_enableButton->setAnchorPoint(ccp(0.5f, 0.5f));
-    // m_enableButton->setID("set-button");
-
     float m_buttonsSize = 0.f;
 
-    m_toggleButton = CCMenuItemToggler::createWithStandardSprites(this, menu_selector(IndexCell::onToggle), 1.0f);
-    m_toggleButton->setScale(0.7f);
-    m_toggleButton->setAnchorPoint(ccp(0.5f, 0.5f));
+    m_toggleButton =
+        Toggler::createWithStandardSprites(0.7f, [this](Toggler*, bool toggled) { m_index->m_enabled = toggled; });
 
     m_buttonsSize += m_toggleButton->getContentSize().width;
 
-    auto* buttonsMenu = CCMenu::create();
+    auto* buttonsMenu = CCNode::create();
     buttonsMenu->addChild(m_toggleButton);
     buttonsMenu->setAnchorPoint(CCPoint {1.0f, 0.5f});
     buttonsMenu->setContentSize(CCSize {50.f, 30.f});
 
     if (m_index->m_userAdded) {
         auto* sprite = CCSprite::createWithSpriteFrameName("GJ_deleteIcon_001.png");
-        auto* deleteButton = CCMenuItemSpriteExtra::create(sprite, this, menu_selector(IndexCell::onDelete));
+        auto* deleteButton = Button::createWithNode(sprite, [this](Button*) { m_onDelete(); });
         deleteButton->setID("delete-button");
         deleteButton->setScale(0.7f);
         buttonsMenu->addChild(deleteButton);
@@ -88,12 +77,13 @@ bool IndexCell::init(
     );
     inputNode->setScale(1.f);
     inputNode->setCommonFilter(CommonFilter::Any);
+    inputNode->setDisplayEmojis(false);
     inputNode->setMaxCharCount(300);
-    inputNode->setString(m_index->m_url, false);
-    inputNode->setTextAlign(TextInputAlign::Left);
+    inputNode->setString(m_index->m_url);
+    inputNode->setAlignment(Label::Alignment::Left);
     inputNode->setCallback([this](std::string const& str) { m_index->m_url = str; });
 
-    auto* menu = CCMenu::create();
+    auto* menu = CCNode::create();
     menu->addChild(inputNode);
     menu->addChild(buttonsMenu);
 
@@ -113,17 +103,7 @@ bool IndexCell::init(
     return true;
 }
 
-void IndexCell::updateUI() { m_toggleButton->toggle(m_index->m_enabled); }
-
-void IndexCell::onToggle(CCObject*) {
-    m_index->m_enabled = !m_index->m_enabled;
-    this->updateUI();
-    // Cancel the toggling of the button by cocos that happens after the
-    // callback.
-    m_toggleButton->toggle(!m_toggleButton->isToggled());
-}
-
-void IndexCell::onDelete(CCObject*) { m_onDelete(); }
+void IndexCell::updateUI() { m_toggleButton->setToggled(m_index->m_enabled); }
 
 IndexCell* IndexCell::create(
     IndexesPopup* parentPopup, IndexSource* index, geode::Function<void()> onDelete, CCSize const& size
